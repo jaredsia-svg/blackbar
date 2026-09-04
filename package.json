@@ -1,0 +1,16 @@
+{
+  "name": "blackbar",
+  "version": "0.1.0",
+  "description": "A document redactor that runs entirely in your browser. Nothing is uploaded.",
+  "private": true,
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node tools/selftest.mjs",
+    "test:ui": "node tools/uitest.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "devDependencies": {
+    "pdfjs-dist": "4.10.38",
+    "playwright": "1.56"
+  }
+}

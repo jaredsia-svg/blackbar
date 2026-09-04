@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blackbar — redact a document, locally</title>
+<meta name="description" content="Redact PDFs, images and text in your browser. The file never leaves your machine.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="mark"><span class="bar"></span> Blackbar</div>
+    <p class="claim" id="claim">Runs entirely in this tab. Your file is never uploaded.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ---------- 1. pick a file ---------- -->
+  <section id="view-drop" class="view">
+    <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose a document to redact">
+      <p class="drop-lead">Drop a document here</p>
+      <p class="drop-sub">PDF, PNG, JPEG, or plain text — or <span class="link">browse</span></p>
+      <input type="file" id="file" accept=".pdf,.png,.jpg,.jpeg,.txt,.md,.markdown,.csv,.log,application/pdf,image/png,image/jpeg,text/plain" hidden>
+    </div>
+    <p id="drop-error" class="error" hidden></p>
+
+    <div class="explainer">
+      <h2>What this does</h2>
+      <p>
+        Blackbar finds things that look sensitive, shows you every one of them,
+        and covers only the ones you approve. Then it rebuilds the document from
+        scratch so the covered content is <strong>gone</strong>, not hidden.
+      </p>
+      <p class="warn">
+        Drawing a black rectangle over text in a PDF editor does not remove the
+        text. It stays in the file and can be copied straight back out. That is
+        how redacted court filings and government documents have been un-redacted
+        by readers. Blackbar rasterises each page and builds a new PDF from the
+        pixels, so there is nothing left underneath.
+      </p>
+      <p class="cost">
+        The trade: the exported PDF is an image, so it is no longer searchable or
+        selectable, and the file is larger. Original metadata — author, title,
+        timestamps, revision history — is dropped rather than copied across.
+      </p>
+    </div>
+  </section>
+
+  <!-- ---------- 2. review ---------- -->
+  <section id="view-review" class="view" hidden>
+    <div class="review">
+
+      <aside class="panel">
+        <div class="panel-head">
+          <h2 id="doc-name">document</h2>
+          <button type="button" id="restart" class="ghost">Start over</button>
+        </div>
+
+        <div class="field">
+          <label for="terms">Names and other terms to cover</label>
+          <textarea id="terms" rows="3" placeholder="One per line — Jane Doe, an account number, a project codename"></textarea>
+          <p class="hint">No rule can find a name reliably. List them here and every occurrence is matched, ignoring case.</p>
+        </div>
+
+        <div id="kinds" class="kinds"></div>
+
+        <div class="field">
+          <label class="check"><input type="checkbox" id="medium"> Include lower-confidence matches</label>
+          <p class="hint" id="medium-hint">Shape-only matches, like a five-digit number that may be a postcode.</p>
+        </div>
+
+        <p class="tip">Drag on the page to add a box by hand. Click a box you added to remove it.</p>
+
+        <div class="counts" id="counts"></div>
+      </aside>
+
+      <div class="stage">
+        <div id="pages" class="pages"></div>
+        <pre id="textview" class="textview" hidden></pre>
+      </div>
+    </div>
+
+    <div class="exportbar">
+      <div class="exportopts">
+        <label class="check"><input type="checkbox" id="lossless"> Lossless output (larger file, no compression artefacts)</label>
+      </div>
+      <div class="exportgo">
+        <span id="exportnote" class="hint"></span>
+        <button type="button" id="export" class="primary">Export redacted file</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="busy" class="busy" hidden><div class="busy-inner"><span class="spinner"></span> <span id="busy-text">Working…</span></div></div>
+
+</main>
+
+<footer class="wrap foot">
+  <p>Blackbar keeps your document in this tab. There is no server, no upload, and no analytics. Close the tab and nothing remains.</p>
+</footer>
+
+<script src="lib/detect.js"></script>
+<script src="lib/boxes.js"></script>
+<script src="lib/measure.js"></script>
+<script src="lib/pdfwrite.js"></script>
+<script src="lib/pdfread.js"></script>
+<script src="lib/render.js"></script>
+<script src="app.js"></script>
+<script type="module">
+  // pdf.js ships as an ES module; everything else here is a classic script, so
+  // it is bridged onto the global the other modules already look for. Both the
+  // library and its worker come from vendor/ — no CDN, because a tool that
+  // promises the file never leaves the machine should not be fetching code
+  // from somewhere else while it makes that promise.
+  import * as pdfjsLib from './vendor/pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('./vendor/pdf.worker.min.mjs', import.meta.url).href;
+  window.pdfjsLib = pdfjsLib;
+  window.dispatchEvent(new Event('blackbar:ready'));
+</script>
+</body>
+</html>
